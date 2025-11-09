@@ -1,0 +1,129 @@
+# =========================
+# Postgres Database
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  labels:
+    app: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+        - name: postgres
+          image: fullstackappdb:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pg-service
+  labels:
+    app: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+  selector:
+    app: database
+
+# =========================
+# Flask Backend
+# =========================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: flask-backend
+          image: backend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+          env:
+            - name: DATABASE_URI
+              value: pg-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+  labels:
+    app: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+    - port: 5000
+      targetPort: 5000
+
+# =========================
+# React Frontend
+# =========================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: react-frontend
+          image: frontend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: react-service
+  labels:
+    app: frontend
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30000
