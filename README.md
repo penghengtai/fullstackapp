@@ -1,9 +1,9 @@
 For the article of this repo, please refer to: https://www.swtestacademy.com/deploy-full-stack-application-in-kubernetes/
 
-## INSTRUCTIONS
+## LAB INSTRUCTIONS
 
 
-1.Create database image
+1.Database image
 
 Navigate to postgress folder and type:
 
@@ -15,7 +15,7 @@ sudo mv db.tar /var/lib/rancher/k3s/agent/images
 ```
 These commands build the PostgreSQL image, export it as a .tar file, and move it into the K3s image folder so it can be used by the cluster.
 
-2.Create backend image
+2.Backend image
 
 Common Issue:
 After running the backend container, you may encounter the following error:
@@ -37,7 +37,19 @@ sudo mv backend.tar /var/lib/rancher/k3s/agent/images
 ```
 These commands build and save the backend (Flask + Python) image, then make it available to the Kubernetes node.
 
-3.Create frontend image
+3.Frontend image
+
+If update frontend message
+Open the frontend source code (frontend/src/App.js),
+change the message from:
+
+"Hi! I am a full-stack app!"
+
+to
+
+"Welcome to my full stack app!"
+
+Then rebuild and reload the new image
 
 Navigate to the frontend folder and type:
 
@@ -49,13 +61,6 @@ sudo mv frontend.tar /var/lib/rancher/k3s/agent/images
 ```
 These commands build the frontend (React) image, export it as a .tar file, and move it to the K3s image folder.
 
-If update frontend message
-Open the frontend source code (frontend/src/App.js),
-change the message from:
-"Hi! I am a full-stack app!"
-to
-"Welcome to my full stack app!"
-Then rebuild and reload the new image
 
 4.Deploy Kubernetes
 
@@ -66,6 +71,34 @@ Apply the Kubernetes deployment file:
 ```bash
 sudo kubectl get pods
 ```
+This command deploys all components — PostgreSQL database, Flask backend, and React frontend — using a single deployment file (kubernetes-deploy.yml).
+In this file, multiple replicas have been defined for the backend and frontend pods to make the application more resilient and fault-tolerant.The deatils are as followed.
+
+```bash
+metadata:
+  name: postgres
+  labels:
+    app: database
+spec:
+  replicas: 1
+```
+```bash
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  replicas: 2      
+```
+```bash
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  replicas: 3 
+```
+
 Example output:
 
 ```bash
@@ -78,6 +111,16 @@ postgres-7958f44b89-f4jn7   1/1     Running
 
 ```
 
+5.Access the Application
+Finally, open your browser and visit the following URL:
+
+
+```bash
+http://172.16.141.138:30000
+```
+You should see the web page displaying the message:
+
+Welcome to my full stack app!
 
 
 
